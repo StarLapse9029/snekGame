@@ -32,7 +32,8 @@ typedef struct{
 int WINDOW_HEIGHT = 800;
 int WINDOW_WIDTH = 1200;
 int SEG_SIZE = 50;
-int DELAY = 25;
+int DELAY = 100;
+int MOVE_DIST = 50;
 
 // Function Declarations
 bool events(Direction *dir);
@@ -49,6 +50,8 @@ Point fruitLocation();
 void addSegment(Node ** snake);
 int eat(Node * snake, Point fruit);
 void hitWall(Node * snake);
+void moveSegment(Node * snake, int x, int y);
+bool hitSelf(Node * snake);
 
 // Main 
 int main(void){
@@ -87,6 +90,7 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
     }
     drawFruit(a, renderer);
     SDL_RenderPresent(renderer);
+    runnning = hitSelf(snake);
     SDL_Delay(DELAY);
   }
 
@@ -201,12 +205,23 @@ void *drawSnake(Node *snake, SDL_Renderer *renderer) {
 
 
 void moveSnake(Node * snake, Direction *dir){
-  //int x = snake->xcor;
-  //int y = snake->ycor;
+  int x = snake->xcor;
+  int y = snake->ycor;
   
-  snake->xcor += dir->x*10;
-  snake->ycor += dir->y*10;
- }
+  snake->xcor += dir->x*MOVE_DIST;
+  snake->ycor += dir->y*MOVE_DIST;
+  moveSegment((Node*)snake->next, x, y);
+}
+void moveSegment(Node * segment, int x, int y){
+  if(segment == NULL){
+    return;
+  }
+  int newx = segment->xcor;
+  int newy = segment->ycor;
+  segment->xcor = x;
+  segment->ycor = y;
+  moveSegment((Node*)segment->next, newx, newy);
+}
 
 void addSegment(Node ** snake){
   Node * tmp;
@@ -225,8 +240,8 @@ void addSegment(Node ** snake){
 }
 // Collisions
 int eat(Node * snake, Point fruit){
-  if(snake->xcor >= fruit.x - 15 && snake->xcor <= fruit.x + 15){
-    if (snake->ycor >= fruit.y - 15 && snake->ycor <= fruit.y + 15) {
+  if(snake->xcor >= fruit.x - (int)(SEG_SIZE/2) && snake->xcor <= fruit.x + (int)(SEG_SIZE/2)){
+    if (snake->ycor >= fruit.y - (int)(SEG_SIZE/2) && snake->ycor <= fruit.y + (int)(SEG_SIZE/2)) {
       addSegment(&snake);
       return 0;
     }
@@ -244,6 +259,18 @@ void hitWall(Node * snake){
   }else if(snake->ycor <= 0){
     snake->ycor = WINDOW_HEIGHT;
   }
+}
+bool hitSelf(Node * snake){
+ Node * tmp = (Node*)snake->next;
+  while(tmp != NULL){
+    if(snake->xcor >= tmp->xcor - 15 && snake->xcor <= tmp->xcor + 15){
+      if(snake->ycor >= tmp->ycor - 15 && snake->ycor <= tmp->ycor + 15){
+        return false;
+      }
+    }
+    tmp = (Node*)tmp->next;
+  }
+  return true;
 }
 
 // Fruit
