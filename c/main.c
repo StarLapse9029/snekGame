@@ -222,7 +222,6 @@ void addSegment(Node * snake){
   new->xcor = tmp->xcor;
   new->ycor = tmp->ycor;
   tmp->next = (struct Node*)new;
-  puts("hi");
 }
 // Collisions
 int eat(Node * snake, Point fruit){
