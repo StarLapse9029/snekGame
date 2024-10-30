@@ -1,4 +1,4 @@
 Compile with:
-'''bash
+```bash
 gcc main.c -o main -lSDL2
-'''
+```
