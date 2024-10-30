@@ -32,7 +32,7 @@ typedef struct{
 int WINDOW_HEIGHT = 800;
 int WINDOW_WIDTH = 1200;
 int SEG_SIZE = 50;
-int DELAY = 10;
+int DELAY = 25;
 
 // Function Declarations
 bool events(Direction *dir);
@@ -46,7 +46,7 @@ int drawFruit(Point a, SDL_Renderer * renderer);
 void moveSnake(Node * snake, Direction *dir);
 void clearRender(SDL_Renderer * renderer);
 Point fruitLocation();
-void addSegment(Node * snake);
+void addSegment(Node ** snake);
 int eat(Node * snake, Point fruit);
 void hitWall(Node * snake);
 
@@ -191,43 +191,43 @@ void *freeSnake(Node *snake){
 }
 
 void *drawSnake(Node *snake, SDL_Renderer *renderer) {
-    Node *tmp = snake;
-    while (tmp != NULL) {
-        drawSquare(tmp->xcor, tmp->ycor, renderer);
-        tmp = (Node*)tmp->next;
-    }
+  Node *tmp = snake;
+  while(tmp != NULL){
+    drawSquare(tmp->xcor, tmp->ycor, renderer);
+    tmp = (Node*)tmp->next;
+  }
   return 0;
 }
 
 
 void moveSnake(Node * snake, Direction *dir){
-  Node * tmp = snake;
-  while(tmp){
-    tmp->xcor += dir->x*10;
-    tmp->ycor += dir->y*10;
-    tmp = (Node*)tmp->next;
-  }
-}
+  //int x = snake->xcor;
+  //int y = snake->ycor;
+  
+  snake->xcor += dir->x*10;
+  snake->ycor += dir->y*10;
+ }
 
-void addSegment(Node * snake){
-  Node * tmp = snake;
+void addSegment(Node ** snake){
+  Node * tmp;
   Node * new = (Node*)malloc(sizeof(Node));
   if(new == NULL){
     return;
   }
-  while(tmp->next != NULL){
-    tmp = (Node*)tmp->next;
+
+  if((*snake)->next != NULL){
+    tmp = (Node*)(*snake)->next;
   }
-  new->next = NULL;
-  new->xcor = tmp->xcor;
-  new->ycor = tmp->ycor;
-  tmp->next = (struct Node*)new;
+  new->xcor = (*snake)->xcor;
+  new->ycor = (*snake)->ycor;
+  (*snake)->next = (struct Node*)new;
+  new->next = (struct Node*)tmp;
 }
 // Collisions
 int eat(Node * snake, Point fruit){
   if(snake->xcor >= fruit.x - 15 && snake->xcor <= fruit.x + 15){
     if (snake->ycor >= fruit.y - 15 && snake->ycor <= fruit.y + 15) {
-      addSegment(snake);
+      addSegment(&snake);
       return 0;
     }
   }
@@ -250,8 +250,8 @@ void hitWall(Node * snake){
 
 Point fruitLocation(){
   Point a;
-  a.x = rand() % (WINDOW_WIDTH - (SEG_SIZE/2)) + SEG_SIZE/2 +1;
-  a.y = rand() % (WINDOW_HEIGHT - (SEG_SIZE/2) + SEG_SIZE/2 + 1);
+  a.x = rand() % (WINDOW_WIDTH - (SEG_SIZE/2)) + 1;
+  a.y = rand() % (WINDOW_HEIGHT - (SEG_SIZE/2) + 1);
   return a;
 }
 
