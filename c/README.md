@@ -2,8 +2,12 @@
 
 ### TODO:
 
+#### -Add more colors
+#### -~Maybe~ Visual effects
+#### -Increase Difficulty with score
+#### -Add Highscores
+#### -Add makefile
 
-#### -Add Scores + History/persistent storage
 
 ### Compile with:
 

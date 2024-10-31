@@ -1,7 +1,10 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_keycode.h>
+#include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
+#include <SDL2/SDL_stdinc.h>
+#include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
 #include <stdbool.h>
@@ -9,7 +12,7 @@
 #include <SDL2/SDL.h>
 #include <stdlib.h>
 #include <time.h>
-
+#include <SDL2/SDL_ttf.h>
 
 // Structs
 typedef struct{
@@ -51,6 +54,7 @@ int eat(Node * snake, Point fruit);
 void hitWall(Node * snake);
 void moveSegment(Node * snake, int x, int y);
 bool hitSelf(Node * snake);
+void showScore(SDL_Renderer * renderer, int num);
 
 // Main 
 int main(void){
@@ -59,8 +63,12 @@ int main(void){
   dir.y = 0;
   Point a = fruitLocation();
   int fruits = 0;
+  int score = 0;
   srand(time(NULL));
   bool runnning = true;
+
+  TTF_Init();  
+
   Node* snake = initSnake();
   if(snake == NULL){
     return 42;
@@ -77,16 +85,25 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
   SDL_RenderClear(renderer);
   SDL_RenderPresent(renderer);
 
+
+
+  // Main Loop
   while(runnning){
     if(events(&dir)){
       runnning = false;
     }
     clearRender(renderer);
+    
+    showScore(renderer, score);
+
     hitWall(snake);
+
     fruits = eat(snake, a);
+
     moveSnake(snake, &dir);
     drawSnake(snake, renderer);
     if(fruits == 0){
+      score++;
       a = fruitLocation();
     }
     drawFruit(a, renderer);
@@ -94,6 +111,7 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
     if(hitSelf(snake)){
       runnning = false;
     }
+
     SDL_Delay(DELAY);
   }
 
@@ -186,6 +204,45 @@ void clearRender(SDL_Renderer * renderer){
   SDL_RenderClear(renderer);
 }
 
+// Texts
+void showScore(SDL_Renderer * renderer, int num){
+  char x[5];
+  SDL_itoa(num, x, 10);
+  TTF_Font * font = TTF_OpenFont("./fonts/ProggyCleanNerdFontMono-Regular.ttf", 24);
+  if(font == NULL){
+    goto exitLabel;
+  }
+  SDL_Color White = {255, 255, 255, 255};
+  SDL_Surface * surfaceMessage = TTF_RenderText_Solid(font, "Score: ", White);
+  if(surfaceMessage == NULL){
+    goto exitLabel;
+  }
+  SDL_Texture * Message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
+  if(Message == NULL){
+    goto exitLabel;
+  }
+  SDL_Surface * score = TTF_RenderText_Solid(font, x, White);
+  if(score == NULL){
+    goto exitLabel;
+  }
+  SDL_Texture * scoreTexture = SDL_CreateTextureFromSurface(renderer, score);
+  if(scoreTexture == NULL){
+    goto exitLabel;
+  }
+
+
+  SDL_Rect Message_rect = {(int)(WINDOW_WIDTH/2) - (int)(surfaceMessage->w/2), 50, surfaceMessage->w, surfaceMessage->h};
+  SDL_Rect score_rect = {(int)(WINDOW_WIDTH /2) + (int)(surfaceMessage->w/2), 50, score->w, score->h};
+
+  SDL_RenderCopy(renderer, Message, NULL, &Message_rect);
+  SDL_RenderCopy(renderer, scoreTexture, NULL, &score_rect);
+
+exitLabel:
+  TTF_CloseFont(font);
+  return;
+}
+
+
 // Snake
 Node *initSnake(){
   Node *head = (Node*)malloc(sizeof(Node));
@@ -236,6 +293,7 @@ void moveSegment(Node * segment, int x, int y){
 
 void addSegment(Node ** snake){
   Node * tmp;
+   
   Node * new = (Node*)malloc(sizeof(Node));
   if(new == NULL){
     return;
@@ -243,6 +301,9 @@ void addSegment(Node ** snake){
 
   if((*snake)->next != NULL){
     tmp = (Node*)(*snake)->next;
+  }else{
+    free(new);
+    return;
   }
   new->xcor = (*snake)->xcor;
   new->ycor = (*snake)->ycor;
