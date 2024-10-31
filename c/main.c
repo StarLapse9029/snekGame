@@ -36,6 +36,8 @@ int WINDOW_HEIGHT = 800;
 int WINDOW_WIDTH = 1200;
 int SEG_SIZE = 50;
 int DELAY = 100;
+SDL_Color WHITE = {255, 255, 255, 255};
+SDL_Color BLACK = {0, 0, 0, 255};
 
 // Function Declarations
 bool events(Direction *dir);
@@ -54,7 +56,7 @@ int eat(Node * snake, Point fruit);
 void hitWall(Node * snake);
 void moveSegment(Node * snake, int x, int y);
 bool hitSelf(Node * snake);
-void showScore(SDL_Renderer * renderer, int num);
+void showScore(SDL_Renderer * renderer, int num, int size, SDL_Color color);
 
 // Main 
 int main(void){
@@ -81,7 +83,7 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
   SDL_Window *window = initWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
   SDL_Renderer * renderer = initRenderer(window);
   
-  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); 
+  SDL_SetRenderDrawColor(renderer, 15, 15, 15, 255); 
   SDL_RenderClear(renderer);
   SDL_RenderPresent(renderer);
 
@@ -94,8 +96,6 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
     }
     clearRender(renderer);
     
-    showScore(renderer, score);
-
     hitWall(snake);
 
     fruits = eat(snake, a);
@@ -107,6 +107,11 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
       a = fruitLocation();
     }
     drawFruit(a, renderer);
+   
+    showScore(renderer, score, 26, BLACK);
+    showScore(renderer, score, 24, WHITE);
+
+
     SDL_RenderPresent(renderer);
     if(hitSelf(snake)){
       runnning = false;
@@ -204,16 +209,16 @@ void clearRender(SDL_Renderer * renderer){
   SDL_RenderClear(renderer);
 }
 
+
 // Texts
-void showScore(SDL_Renderer * renderer, int num){
+void showScore(SDL_Renderer * renderer, int num, int size, SDL_Color color){
   char x[5];
   SDL_itoa(num, x, 10);
-  TTF_Font * font = TTF_OpenFont("./fonts/ProggyCleanNerdFontMono-Regular.ttf", 24);
+  TTF_Font * font = TTF_OpenFont("./fonts/ProggyCleanNerdFontMono-Regular.ttf", size);
   if(font == NULL){
     goto exitLabel;
   }
-  SDL_Color White = {255, 255, 255, 255};
-  SDL_Surface * surfaceMessage = TTF_RenderText_Solid(font, "Score: ", White);
+  SDL_Surface * surfaceMessage = TTF_RenderText_Solid(font, "Score: ", color);
   if(surfaceMessage == NULL){
     goto exitLabel;
   }
@@ -221,7 +226,7 @@ void showScore(SDL_Renderer * renderer, int num){
   if(Message == NULL){
     goto exitLabel;
   }
-  SDL_Surface * score = TTF_RenderText_Solid(font, x, White);
+  SDL_Surface * score = TTF_RenderText_Solid(font, x, color);
   if(score == NULL){
     goto exitLabel;
   }
@@ -298,17 +303,17 @@ void addSegment(Node ** snake){
   if(new == NULL){
     return;
   }
+  new->xcor = (*snake)->xcor;
+  new->ycor = (*snake)->ycor;
+
 
   if((*snake)->next != NULL){
     tmp = (Node*)(*snake)->next;
+    (*snake)->next = (struct Node*)new;
+    new->next = (struct Node*)tmp;
   }else{
-    free(new);
-    return;
+    (*snake)->next = (struct Node*)new;
   }
-  new->xcor = (*snake)->xcor;
-  new->ycor = (*snake)->ycor;
-  (*snake)->next = (struct Node*)new;
-  new->next = (struct Node*)tmp;
 }
 // Collisions
 int eat(Node * snake, Point fruit){
