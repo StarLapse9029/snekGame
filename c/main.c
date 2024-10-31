@@ -43,13 +43,13 @@ SDL_Color BLACK = {0, 0, 0, 255};
 bool events(Direction *dir);
 SDL_Window* initWindow(int x, int y);
 SDL_Renderer* initRenderer(SDL_Window * window);
-void drawSquare(int x, int y, SDL_Renderer * renderer);
+void drawSquare(int x, int y, SDL_Renderer * renderer, int color);
 Node *initSnake();
 void *freeSnake(Node *snake);
-void *drawSnake(Node *snake, SDL_Renderer * renderer);
+void *drawSnake(Node *snake, SDL_Renderer * renderer, int color);
 int drawFruit(Point a, SDL_Renderer * renderer);
 void moveSnake(Node * snake, Direction *dir);
-void clearRender(SDL_Renderer * renderer);
+void clearRender(SDL_Renderer * renderer, int color);
 Point fruitLocation();
 void addSegment(Node ** snake);
 int eat(Node * snake, Point fruit);
@@ -68,6 +68,8 @@ int main(void){
   int score = 0;
   srand(time(NULL));
   bool runnning = true;
+  int color = 255;
+  int bg = 0;
 
   TTF_Init();  
 
@@ -94,21 +96,23 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
     if(events(&dir)){
       runnning = false;
     }
-    clearRender(renderer);
+
+
+    clearRender(renderer, bg);
     
     hitWall(snake);
 
     fruits = eat(snake, a);
 
     moveSnake(snake, &dir);
-    drawSnake(snake, renderer);
+    drawSnake(snake, renderer, color);
     if(fruits == 0){
       score++;
       a = fruitLocation();
     }
     drawFruit(a, renderer);
    
-    showScore(renderer, score, 26, BLACK);
+    showScore(renderer, score, 28, BLACK);
     showScore(renderer, score, 24, WHITE);
 
 
@@ -198,14 +202,14 @@ SDL_Renderer *initRenderer(SDL_Window *window){
   return renderer;
 }
 
-void drawSquare(int x, int y, SDL_Renderer * renderer){
+void drawSquare(int x, int y, SDL_Renderer * renderer, int color){
   SDL_Rect rect = {x, y, SEG_SIZE, SEG_SIZE};
-  SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+  SDL_SetRenderDrawColor(renderer, color, color, color, 255);
   SDL_RenderFillRect(renderer, &rect);
 }
 
-void clearRender(SDL_Renderer * renderer){
-  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+void clearRender(SDL_Renderer * renderer, int color){
+  SDL_SetRenderDrawColor(renderer, color, color, color, 255);
   SDL_RenderClear(renderer);
 }
 
@@ -267,10 +271,10 @@ void *freeSnake(Node *snake){
   return 0;
 }
 
-void *drawSnake(Node *snake, SDL_Renderer *renderer) {
+void *drawSnake(Node *snake, SDL_Renderer *renderer, int color){
   Node *tmp = snake;
   while(tmp != NULL){
-    drawSquare(tmp->xcor, tmp->ycor, renderer);
+    drawSquare(tmp->xcor, tmp->ycor, renderer, color);
     tmp = (Node*)tmp->next;
   }
   return 0;
