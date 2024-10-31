@@ -12,7 +12,7 @@
 ### Compile with:
 
 ```bash
-gcc main.c -o main -lSDL2
+gcc main.c -o main -lSDL2 -lSDL2_ttf
 ```
 
 ### Challenge for my future self ~you hate me already~:
