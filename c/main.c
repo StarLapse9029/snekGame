@@ -33,7 +33,6 @@ int WINDOW_HEIGHT = 800;
 int WINDOW_WIDTH = 1200;
 int SEG_SIZE = 50;
 int DELAY = 100;
-int MOVE_DIST = 50;
 
 // Function Declarations
 bool events(Direction *dir);
@@ -79,7 +78,9 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
   SDL_RenderPresent(renderer);
 
   while(runnning){
-    runnning = events(&dir);
+    if(events(&dir)){
+      runnning = false;
+    }
     clearRender(renderer);
     hitWall(snake);
     fruits = eat(snake, a);
@@ -90,7 +91,9 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
     }
     drawFruit(a, renderer);
     SDL_RenderPresent(renderer);
-    runnning = hitSelf(snake);
+    if(hitSelf(snake)){
+      runnning = false;
+    }
     SDL_Delay(DELAY);
   }
 
@@ -107,26 +110,34 @@ bool events(Direction *dir){
       while(SDL_PollEvent(&event)){
         switch (event.type) {
             case SDL_QUIT:
-                return false;
+                return true;
             case SDL_KEYDOWN:
               switch(event.key.keysym.sym){
                 case SDLK_ESCAPE:
-                  return false;
+                  return true;
                 case SDLK_a:
-                  dir->x = -1;
-                  dir->y = 0;
+                  if(dir->x != 1){
+                    dir->x = -1;
+                    dir->y = 0;
+                  }
                   break;
                 case SDLK_s:
-                  dir->x = 0;
-                  dir->y = 1;
+                  if(dir->y != -1){
+                    dir->x = 0;
+                    dir->y = 1;
+                  }
                   break;
                 case SDLK_d:
-                  dir->x = 1;
-                  dir->y = 0;
+                  if(dir->x != -1){ 
+                    dir->x = 1;
+                    dir->y = 0;
+                  }
                   break;
                 case SDLK_w:
-                  dir->x = 0;
-                  dir->y = -1;
+                  if(dir->y != 1){
+                    dir->x = 0;
+                    dir->y = -1;
+                  }
                   break;
                 default:
                   break;
@@ -135,7 +146,7 @@ bool events(Direction *dir){
               break;
           }
       }
-  return true;  
+  return false;  
 }
 
 SDL_Window *initWindow(int x, int y){
@@ -208,8 +219,8 @@ void moveSnake(Node * snake, Direction *dir){
   int x = snake->xcor;
   int y = snake->ycor;
   
-  snake->xcor += dir->x*MOVE_DIST;
-  snake->ycor += dir->y*MOVE_DIST;
+  snake->xcor += dir->x*SEG_SIZE;
+  snake->ycor += dir->y*SEG_SIZE;
   moveSegment((Node*)snake->next, x, y);
 }
 void moveSegment(Node * segment, int x, int y){
@@ -240,8 +251,8 @@ void addSegment(Node ** snake){
 }
 // Collisions
 int eat(Node * snake, Point fruit){
-  if(snake->xcor >= fruit.x - (int)(SEG_SIZE/2) && snake->xcor <= fruit.x + (int)(SEG_SIZE/2)){
-    if (snake->ycor >= fruit.y - (int)(SEG_SIZE/2) && snake->ycor <= fruit.y + (int)(SEG_SIZE/2)) {
+  if(snake->xcor == fruit.x * SEG_SIZE){
+    if (snake->ycor == fruit.y * SEG_SIZE){
       addSegment(&snake);
       return 0;
     }
@@ -250,42 +261,42 @@ int eat(Node * snake, Point fruit){
 }
 
 void hitWall(Node * snake){
-  if(snake->xcor >= WINDOW_WIDTH){
+  if(snake->xcor > WINDOW_WIDTH){
     snake->xcor = 0;
-  }else if(snake->xcor <= 0){
+  }else if(snake->xcor < 0){
     snake->xcor = WINDOW_WIDTH;
-  }else if(snake->ycor >= WINDOW_HEIGHT){
+  }else if(snake->ycor > WINDOW_HEIGHT){
     snake->ycor = 0;
-  }else if(snake->ycor <= 0){
+  }else if(snake->ycor < 0){
     snake->ycor = WINDOW_HEIGHT;
   }
 }
 bool hitSelf(Node * snake){
  Node * tmp = (Node*)snake->next;
   while(tmp != NULL){
-    if(snake->xcor >= tmp->xcor - 15 && snake->xcor <= tmp->xcor + 15){
-      if(snake->ycor >= tmp->ycor - 15 && snake->ycor <= tmp->ycor + 15){
-        return false;
+    if(snake->xcor == tmp->xcor){
+      if(snake->ycor == tmp->ycor){
+        return true;
       }
     }
     tmp = (Node*)tmp->next;
   }
-  return true;
+  return false;
 }
 
 // Fruit
 
 Point fruitLocation(){
   Point a;
-  a.x = rand() % (WINDOW_WIDTH - (SEG_SIZE/2)) + 1;
-  a.y = rand() % (WINDOW_HEIGHT - (SEG_SIZE/2) + 1);
+  a.x = rand() % (int)(WINDOW_WIDTH/SEG_SIZE);
+  a.y = rand() % (int)(WINDOW_HEIGHT/SEG_SIZE);
   return a;
 }
 
 int drawFruit(Point a, SDL_Renderer * renderer){
-  int x = a.x;
-  int y = a.y;  
-  SDL_Rect fruit = {x, y, (int)(SEG_SIZE * 2/3), (int)(SEG_SIZE * 2/3)};
+  int x = a.x * SEG_SIZE;
+  int y = a.y * SEG_SIZE;  
+  SDL_Rect fruit = {x, y, SEG_SIZE, SEG_SIZE};
   SDL_SetRenderDrawColor(renderer, 255, 15, 15, 255);
   SDL_RenderFillRect(renderer, &fruit);
   return 1;
