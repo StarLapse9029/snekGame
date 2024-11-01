@@ -57,6 +57,8 @@ void hitWall(Node * snake);
 void moveSegment(Node * snake, int x, int y);
 bool hitSelf(Node * snake);
 void showScore(SDL_Renderer * renderer, int num, int size, SDL_Color color);
+void startScreen(SDL_Renderer * renderer, int alpha);
+void endScreen(SDL_Renderer * renderer);
 
 // Main 
 int main(void){
@@ -85,6 +87,12 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
   SDL_Window *window = initWindow(WINDOW_WIDTH, WINDOW_HEIGHT);
   SDL_Renderer * renderer = initRenderer(window);
   
+  for(int i = 0; i < 100; i++){
+    startScreen(renderer, (int)(255 - (i*2.55)));
+    SDL_Delay(15);
+  }
+  SDL_Delay(250);
+
   SDL_SetRenderDrawColor(renderer, 15, 15, 15, 255); 
   SDL_RenderClear(renderer);
   SDL_RenderPresent(renderer);
@@ -124,7 +132,10 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
     SDL_Delay(DELAY);
   }
 
+  endScreen(renderer);
+  SDL_Delay(1500);
 
+  TTF_Quit();
   freeSnake(snake);
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
@@ -370,4 +381,32 @@ int drawFruit(Point a, SDL_Renderer * renderer){
   SDL_SetRenderDrawColor(renderer, 255, 15, 15, 255);
   SDL_RenderFillRect(renderer, &fruit);
   return 1;
+}
+
+void startScreen(SDL_Renderer * renderer, int alpha){
+  SDL_SetRenderDrawColor(renderer, 0, 0, 10, alpha);
+  SDL_RenderClear(renderer);
+
+  SDL_Color  color = {255, 255, 255, alpha};
+  TTF_Font * font1 = TTF_OpenFont("./fonts/ProggyCleanNerdFontMono-Regular.ttf", 2*SEG_SIZE);
+  SDL_Surface * text1 = TTF_RenderText_Solid(font1, "SnakeGame", color);
+  SDL_Texture * message1 = SDL_CreateTextureFromSurface(renderer, text1);
+  SDL_Rect rect1 = {(int)(WINDOW_WIDTH/2 - text1->w/2), (int)(WINDOW_HEIGHT/2 - text1->h), text1->w, text1->h };
+
+  SDL_RenderCopy(renderer, message1, NULL, &rect1);
+
+  SDL_RenderPresent(renderer);
+}
+
+void endScreen(SDL_Renderer * renderer){
+  SDL_SetRenderDrawColor(renderer, 0, 0, 10, 255);
+  SDL_RenderClear(renderer);
+  
+  TTF_Font * font1 = TTF_OpenFont("./fonts/ProggyCleanNerdFontMono-Regular.ttf", 2*SEG_SIZE);
+  SDL_Surface * text1 = TTF_RenderText_Solid(font1, "Game Over", WHITE);
+  SDL_Texture * message1 = SDL_CreateTextureFromSurface(renderer, text1);
+  SDL_Rect rect1 = {(int)(WINDOW_WIDTH/2 - text1->w/2), (int)(WINDOW_HEIGHT/2 - text1->h), text1->w, text1->h };
+
+  SDL_RenderCopy(renderer, message1, NULL, &rect1);
+  SDL_RenderPresent(renderer);
 }
