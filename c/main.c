@@ -60,6 +60,7 @@ bool hitSelf(Node * snake);
 void showScore(SDL_Renderer * renderer, int num, int size, SDL_Color color);
 void startScreen(SDL_Renderer * renderer, int alpha);
 void endScreen(SDL_Renderer * renderer, int num);
+void storeScores(int num);
 
 // Main 
 int main(void){
@@ -121,7 +122,7 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
     }
     drawFruit(a, renderer);
    
-    showScore(renderer, score, 28, BLACK);
+    showScore(renderer, score, 26, BLACK);
     showScore(renderer, score, 24, WHITE);
 
 
@@ -134,6 +135,7 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
   }
 
   endScreen(renderer, score);
+  storeScores(score);
   SDL_Delay(1500);
 
   TTF_Quit();
@@ -346,11 +348,11 @@ int eat(Node * snake, Point fruit){
 }
 
 void hitWall(Node * snake){
-  if(snake->xcor > WINDOW_WIDTH){
+  if(snake->xcor > WINDOW_WIDTH - SEG_SIZE){
     snake->xcor = 0;
   }else if(snake->xcor < 0){
     snake->xcor = WINDOW_WIDTH;
-  }else if(snake->ycor > WINDOW_HEIGHT){
+  }else if(snake->ycor > WINDOW_HEIGHT - SEG_SIZE){
     snake->ycor = 0;
   }else if(snake->ycor < 0){
     snake->ycor = WINDOW_HEIGHT;
@@ -387,6 +389,7 @@ int drawFruit(Point a, SDL_Renderer * renderer){
   return 1;
 }
 
+// Start and End Screens
 void startScreen(SDL_Renderer * renderer, int alpha){
   SDL_SetRenderDrawColor(renderer, 0, 0, 10, alpha);
   SDL_RenderClear(renderer);
@@ -431,3 +434,23 @@ void endScreen(SDL_Renderer * renderer, int num){
 
   SDL_RenderPresent(renderer);
 }
+
+void storeScores(int num){
+  if(num > 99999) return;
+
+  FILE *fptr = NULL;
+  fptr = fopen("scores.csv", "a+");
+  if(fptr == NULL){
+    return;
+  }
+
+  char score[5]; 
+  SDL_itoa(num, score, 10);
+
+  time_t  t = time(NULL);
+
+  fprintf(fptr, "%s; %s", score, ctime(&t));
+  fclose(fptr);
+}
+
+
