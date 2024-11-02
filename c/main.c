@@ -74,6 +74,7 @@ int main(void){
   bool runnning = true;
   int color = 255;
   int bg = 0;
+  int debuff = 0;
 
   TTF_Init();  
 
@@ -103,6 +104,7 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
 
   // Main Loop
   while(runnning){
+    debuff = (score/10 < 80 ? score/10 : 20);
     if(events(&dir)){
       runnning = false;
     }
@@ -131,7 +133,7 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
       runnning = false;
     }
 
-    SDL_Delay(DELAY);
+    SDL_Delay(DELAY - (int)(debuff*3));
   }
 
   endScreen(renderer, score);
@@ -412,7 +414,7 @@ void endScreen(SDL_Renderer * renderer, int num){
   if(num > 99999){
     return;
   }
-  char finalScore[] = "Final Score: ";
+  char finalScore[20] = "Final Score: ";
   char score[5];
   SDL_itoa(num, score, 10);
   strcat(finalScore, score);  
