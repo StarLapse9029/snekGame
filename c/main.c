@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <SDL2/SDL_ttf.h>
+#include <string.h>
 
 // Structs
 typedef struct{
@@ -58,7 +59,7 @@ void moveSegment(Node * snake, int x, int y);
 bool hitSelf(Node * snake);
 void showScore(SDL_Renderer * renderer, int num, int size, SDL_Color color);
 void startScreen(SDL_Renderer * renderer, int alpha);
-void endScreen(SDL_Renderer * renderer);
+void endScreen(SDL_Renderer * renderer, int num);
 
 // Main 
 int main(void){
@@ -132,7 +133,7 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
     SDL_Delay(DELAY);
   }
 
-  endScreen(renderer);
+  endScreen(renderer, score);
   SDL_Delay(1500);
 
   TTF_Quit();
@@ -227,6 +228,9 @@ void clearRender(SDL_Renderer * renderer, int color){
 
 // Texts
 void showScore(SDL_Renderer * renderer, int num, int size, SDL_Color color){
+  if(num > 99999){
+    return;
+  }
   char x[5];
   SDL_itoa(num, x, 10);
   TTF_Font * font = TTF_OpenFont("./fonts/ProggyCleanNerdFontMono-Regular.ttf", size);
@@ -398,15 +402,32 @@ void startScreen(SDL_Renderer * renderer, int alpha){
   SDL_RenderPresent(renderer);
 }
 
-void endScreen(SDL_Renderer * renderer){
+void endScreen(SDL_Renderer * renderer, int num){
   SDL_SetRenderDrawColor(renderer, 0, 0, 10, 255);
   SDL_RenderClear(renderer);
   
+  if(num > 99999){
+    return;
+  }
+  char finalScore[] = "Final Score: ";
+  char score[5];
+  SDL_itoa(num, score, 10);
+  strcat(finalScore, score);  
+
   TTF_Font * font1 = TTF_OpenFont("./fonts/ProggyCleanNerdFontMono-Regular.ttf", 2*SEG_SIZE);
   SDL_Surface * text1 = TTF_RenderText_Solid(font1, "Game Over", WHITE);
   SDL_Texture * message1 = SDL_CreateTextureFromSurface(renderer, text1);
   SDL_Rect rect1 = {(int)(WINDOW_WIDTH/2 - text1->w/2), (int)(WINDOW_HEIGHT/2 - text1->h), text1->w, text1->h };
 
   SDL_RenderCopy(renderer, message1, NULL, &rect1);
+
+  TTF_Font * font2 = TTF_OpenFont("./fonts/ProggyCleanNerdFontMono-Regular.ttf", SEG_SIZE);
+  SDL_Surface * text2 = TTF_RenderText_Solid(font2, finalScore, WHITE);
+  SDL_Texture * message2 = SDL_CreateTextureFromSurface(renderer, text2);
+  SDL_Rect rect2 = {(int)(WINDOW_WIDTH/2 - text2->w/2), (int)(WINDOW_HEIGHT/2 + text1->h), text2->w, text2->h};
+
+  SDL_RenderCopy(renderer, message2, NULL, &rect2);
+
+
   SDL_RenderPresent(renderer);
 }
