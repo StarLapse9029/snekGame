@@ -32,6 +32,12 @@ typedef struct{
   int y;
 } Point;
 
+typedef struct{
+  int score;
+  char dateTime[25];
+  struct scoreRecord * next;
+}scoreRecord;
+
 // Constants
 int WINDOW_HEIGHT = 800;
 int WINDOW_WIDTH = 1200;
@@ -61,6 +67,9 @@ void showScore(SDL_Renderer * renderer, int num, int size, SDL_Color color);
 void startScreen(SDL_Renderer * renderer, int alpha);
 void endScreen(SDL_Renderer * renderer, int num);
 void storeScores(int num);
+scoreRecord * readScores();
+void printScores(scoreRecord * scores);
+void freeScores(scoreRecord * scores);
 
 // Main 
 int main(void){
@@ -135,6 +144,10 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
 
     SDL_Delay(DELAY - (int)(debuff*3));
   }
+  
+  scoreRecord * scoreList = readScores();
+  printScores(scoreList);
+  freeScores(scoreList);
 
   endScreen(renderer, score);
   storeScores(score);
@@ -455,4 +468,40 @@ void storeScores(int num){
   fclose(fptr);
 }
 
+scoreRecord * readScores(){
+  FILE * fptr = NULL;
+  fptr = fopen("./scores.csv", "r");
+  if(fptr == NULL){
+    return NULL;
+  }
+  
+  char buffer[32];
+  scoreRecord * tmp = NULL;
+  scoreRecord * curr = (scoreRecord*)malloc(sizeof(scoreRecord));
+  tmp = curr;
+  while(fgets(buffer, 32, fptr) != NULL){
+    scoreRecord * new = (scoreRecord*)malloc(sizeof(scoreRecord));
+    if(new == NULL) return NULL;
+    if(sscanf(buffer, "%i; %s", &new->score, new->dateTime) != 2){
+      free(new);
+      continue;
+    }
+    tmp->next = (struct scoreRecord*)new;
+    tmp = (scoreRecord*)tmp->next;
+  }
+  return curr;
+}
+void printScores(scoreRecord * scores){
+  if(scores == NULL) return;
+  scoreRecord * tmp = (scoreRecord*)scores->next;
+  while(tmp != NULL){
+    printf("%d   %s\n", tmp->score, tmp->dateTime);
+    tmp = (scoreRecord*)tmp->next;
+  }
+}
 
+void freeScores(scoreRecord * scores){
+  if(scores == NULL) return;
+  freeScores((scoreRecord*)scores->next);
+  free(scores);  
+}
