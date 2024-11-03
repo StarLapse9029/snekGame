@@ -489,6 +489,7 @@ scoreRecord * readScores(){
     tmp->next = (struct scoreRecord*)new;
     tmp = (scoreRecord*)tmp->next;
   }
+  tmp->next = NULL;
   return curr;
 }
 void printScores(scoreRecord * scores){
