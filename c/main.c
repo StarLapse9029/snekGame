@@ -70,6 +70,7 @@ void storeScores(int num);
 scoreRecord * readScores();
 void printScores(scoreRecord * scores);
 void freeScores(scoreRecord * scores);
+void transition(int * p, bool change);
 
 // Main 
 int main(void){
@@ -84,6 +85,9 @@ int main(void){
   int color = 255;
   int bg = 0;
   int debuff = 0;
+  int p = 0;
+  bool change = true;
+  int * pp = &p;
 
   TTF_Init();  
 
@@ -110,23 +114,28 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
   SDL_RenderPresent(renderer);
 
 
-
+  int time = 0;
   // Main Loop
   while(runnning){
     debuff = (score/10 < 80 ? score/10 : 20);
     if(events(&dir)){
       runnning = false;
     }
-
-
-    clearRender(renderer, bg);
+    if(time == 100){
+      transition(pp, change);
+    }
+    if(time > 100){
+      change = !change;
+      time = 0;
+    }
+    clearRender(renderer, bg + (p*100));
     
     hitWall(snake);
 
     fruits = eat(snake, a);
 
     moveSnake(snake, &dir);
-    drawSnake(snake, renderer, color);
+    drawSnake(snake, renderer, (color - p*100));
     if(fruits == 0){
       score++;
       a = fruitLocation();
@@ -141,7 +150,7 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
     if(hitSelf(snake)){
       runnning = false;
     }
-
+    time++;
     SDL_Delay(DELAY - (int)(debuff*3));
   }
   
@@ -505,4 +514,12 @@ void freeScores(scoreRecord * scores){
   if(scores == NULL) return;
   freeScores((scoreRecord*)scores->next);
   free(scores);  
+}
+
+void transition(int * p, bool change){
+  if(change){
+    *p = 0;
+  }else{
+    *p = 2;
+  }
 }
