@@ -121,21 +121,21 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
     if(events(&dir)){
       runnning = false;
     }
-    if(time == 100){
+    if(time > 94){
       transition(pp, change);
     }
     if(time > 100){
       change = !change;
       time = 0;
     }
-    clearRender(renderer, bg + (p*100));
+    clearRender(renderer, bg + (p*15));
     
     hitWall(snake);
 
     fruits = eat(snake, a);
 
     moveSnake(snake, &dir);
-    drawSnake(snake, renderer, (color - p*100));
+    drawSnake(snake, renderer, (color - p*15));
     if(fruits == 0){
       score++;
       a = fruitLocation();
@@ -518,8 +518,8 @@ void freeScores(scoreRecord * scores){
 
 void transition(int * p, bool change){
   if(change){
-    *p = 0;
+    *p += 2;
   }else{
-    *p = 2;
+    *p -= 2;
   }
 }
