@@ -34,7 +34,6 @@ typedef struct{
 
 typedef struct{
   int score;
-  char dateTime[25];
   struct scoreRecord * next;
 }scoreRecord;
 
@@ -65,12 +64,13 @@ void moveSegment(Node * snake, int x, int y);
 bool hitSelf(Node * snake);
 void showScore(SDL_Renderer * renderer, int num, int size, SDL_Color color);
 void startScreen(SDL_Renderer * renderer, int alpha);
-void endScreen(SDL_Renderer * renderer, int num);
+void endScreen(SDL_Renderer * renderer, int num, scoreRecord * scoreList);
 void storeScores(int num);
 scoreRecord * readScores();
-void printScores(scoreRecord * scores);
+void printScores(scoreRecord * scores, SDL_Renderer * renderer);
 void freeScores(scoreRecord * scores);
 void transition(int * p, bool change);
+void sortScores(scoreRecord * scores);
 
 // Main 
 int main(void){
@@ -153,14 +153,14 @@ printf("Could not initialize SDL: %s\n", SDL_GetError());
     time++;
     SDL_Delay(DELAY - (int)(debuff*3));
   }
-  
   scoreRecord * scoreList = readScores();
-  printScores(scoreList);
+
+  sortScores(scoreList);
+  endScreen(renderer, score, scoreList);
   freeScores(scoreList);
 
-  endScreen(renderer, score);
   storeScores(score);
-  SDL_Delay(1500);
+  SDL_Delay(3000);
 
   TTF_Quit();
   freeSnake(snake);
@@ -257,7 +257,7 @@ void showScore(SDL_Renderer * renderer, int num, int size, SDL_Color color){
   if(num > 99999){
     return;
   }
-  char x[5];
+  char x[6];
   SDL_itoa(num, x, 10);
   TTF_Font * font = TTF_OpenFont("./fonts/ProggyCleanNerdFontMono-Regular.ttf", size);
   if(font == NULL){
@@ -371,6 +371,7 @@ int eat(Node * snake, Point fruit){
   return 1;
 }
 
+
 void hitWall(Node * snake){
   if(snake->xcor > WINDOW_WIDTH - SEG_SIZE){
     snake->xcor = 0;
@@ -429,7 +430,7 @@ void startScreen(SDL_Renderer * renderer, int alpha){
   SDL_RenderPresent(renderer);
 }
 
-void endScreen(SDL_Renderer * renderer, int num){
+void endScreen(SDL_Renderer * renderer, int num, scoreRecord * scoreList){
   SDL_SetRenderDrawColor(renderer, 0, 0, 10, 255);
   SDL_RenderClear(renderer);
   
@@ -437,7 +438,7 @@ void endScreen(SDL_Renderer * renderer, int num){
     return;
   }
   char finalScore[20] = "Final Score: ";
-  char score[5];
+  char score[6];
   SDL_itoa(num, score, 10);
   strcat(finalScore, score);  
 
@@ -455,7 +456,8 @@ void endScreen(SDL_Renderer * renderer, int num){
 
   SDL_RenderCopy(renderer, message2, NULL, &rect2);
 
-
+  printScores(scoreList, renderer);
+ 
   SDL_RenderPresent(renderer);
 }
 
@@ -468,12 +470,10 @@ void storeScores(int num){
     return;
   }
 
-  char score[5]; 
+  char score[6]; 
   SDL_itoa(num, score, 10);
 
-  time_t  t = time(NULL);
-
-  fprintf(fptr, "%s; %s", score, ctime(&t));
+  fprintf(fptr, "%s", score);
   fclose(fptr);
 }
 
@@ -491,7 +491,7 @@ scoreRecord * readScores(){
   while(fgets(buffer, 32, fptr) != NULL){
     scoreRecord * new = (scoreRecord*)malloc(sizeof(scoreRecord));
     if(new == NULL) return NULL;
-    if(sscanf(buffer, "%i; %s", &new->score, new->dateTime) != 2){
+    if(sscanf(buffer, "%i", &new->score) != 1){
       free(new);
       continue;
     }
@@ -501,11 +501,38 @@ scoreRecord * readScores(){
   tmp->next = NULL;
   return curr;
 }
-void printScores(scoreRecord * scores){
+
+void sortScores(scoreRecord * scores){
+  int tempVar;
+  scoreRecord * node = (scoreRecord*)scores->next;
+  scoreRecord * tmp = NULL;
+  while(node != NULL){
+    tmp = (scoreRecord*)node->next;
+    while(tmp != NULL){
+      if(tmp->score > node->score){
+        tempVar = tmp->score;
+        tmp->score = node->score;
+        node->score = tempVar;
+      }
+      tmp = (scoreRecord*)tmp->next;
+    }
+    node = (scoreRecord*)node->next;
+  }
+}
+
+void printScores(scoreRecord * scores, SDL_Renderer * renderer){
   if(scores == NULL) return;
+  char buffer[32];
   scoreRecord * tmp = (scoreRecord*)scores->next;
-  while(tmp != NULL){
-    printf("%d   %s\n", tmp->score, tmp->dateTime);
+
+  for(int i = 0; i < 5; i++){
+    if(tmp == NULL) break;
+    sprintf(buffer, "%d", tmp->score);
+    TTF_Font * font = TTF_OpenFont("./fonts/ProggyCleanNerdFontMono-Regular.ttf", (int)(SEG_SIZE * 2/3));
+    SDL_Surface * text2 = TTF_RenderText_Solid(font, buffer, WHITE);
+    SDL_Texture * message2 = SDL_CreateTextureFromSurface(renderer, text2);
+    SDL_Rect rect2 = {(int)(WINDOW_WIDTH/2-text2->w/2), (int)(WINDOW_HEIGHT*2/3 + text2->h*i), text2->w, text2->h};
+    SDL_RenderCopy(renderer, message2, NULL, &rect2);
     tmp = (scoreRecord*)tmp->next;
   }
 }
